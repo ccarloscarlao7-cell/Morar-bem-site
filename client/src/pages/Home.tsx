@@ -73,6 +73,7 @@ interface Lead {
   id: string;
   nome: string;
   telefone: string;
+  email: string;
   codigoImovel: string;
   tipoImovel: string | null;
   faixaInteresse: string | null;
@@ -189,6 +190,7 @@ export default function Home() {
   const [selectedType, setSelectedType] = useState<string>("todos");
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [email, setEmail] = useState("");
   const [codigoImovel, setCodigoImovel] = useState("");
   const [tipoImovel, setTipoImovel] = useState("");
   const [faixaInteresse, setFaixaInteresse] = useState("");
@@ -308,6 +310,7 @@ export default function Home() {
     setTipoImovel(propertyType ?? "");
     setNome("");
     setTelefone("");
+    setEmail("");
     setFaixaInteresse("");
     setIsDetailOpen(false);
     setIsModalOpen(true);
@@ -322,6 +325,7 @@ export default function Home() {
     const leadData = {
       nome: nome.trim(),
       telefone: telefone.trim(),
+      email: email.trim(),
       codigoImovel: codigoImovel.trim(),
       tipoImovel: tipoImovel || null,
       faixaInteresse: faixaInteresse || null,
@@ -875,6 +879,10 @@ export default function Home() {
                         <span className="text-slate-400 block">Imóvel</span>
                         <span className="font-semibold text-slate-800">{lead.codigoImovel}</span>
                       </div>
+                      <div>
+                        <span className="text-slate-400 block">E-mail</span>
+                        <span className="font-semibold text-slate-800 break-all">{lead.email}</span>
+                      </div>
                       {lead.tipoImovel && (
                         <div>
                           <span className="text-slate-400 block">Tipo</span>
@@ -1131,6 +1139,13 @@ export default function Home() {
                     Telefone <span className="text-red-500 ml-1 font-bold">*</span>
                   </Label>
                   <Input id="telefone" type="tel" value={telefone} onChange={handlePhoneChange} placeholder="(11) 99999-9999" className="rounded-xl border-slate-200 h-11" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-slate-700 font-semibold text-sm flex items-center">
+                    E-mail <span className="text-red-500 ml-1 font-bold">*</span>
+                  </Label>
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className="rounded-xl border-slate-200 h-11" />
                 </div>
 
                 <div className="space-y-1.5">

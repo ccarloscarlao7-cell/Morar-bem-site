@@ -46,17 +46,23 @@ async function startServer() {
   });
 
   app.post("/api/leads", (req, res) => {
-    const { nome, telefone, codigoImovel, tipoImovel, faixaInteresse } = req.body;
+    const { nome, telefone, email, codigoImovel, tipoImovel, faixaInteresse } = req.body;
 
     // Validation
-    if (!nome || !telefone || !codigoImovel || !nome.trim() || !telefone.trim() || !codigoImovel.trim()) {
+    if (!nome || !telefone || !email || !codigoImovel || !nome.trim() || !telefone.trim() || !email.trim() || !codigoImovel.trim()) {
       return res.status(400).json({ error: "Por favor, preencha todos os campos obrigatórios." });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({ error: "Por favor, informe um e-mail válido." });
     }
 
     const newLead = {
       id: Date.now().toString(),
       nome: nome.trim(),
       telefone: telefone.trim(),
+      email: email.trim(),
       codigoImovel: codigoImovel.trim(),
       tipoImovel: tipoImovel || null,
       faixaInteresse: faixaInteresse || null,
