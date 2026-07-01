@@ -902,7 +902,7 @@ export default function Home() {
                     </div>
 
                     {/* Quick contact actions for admin */}
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       <a
                         href={`https://wa.me/55${lead.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${lead.nome}! Aqui é da Imobiliária Morar Bem. Recebemos seu interesse no imóvel ${lead.codigoImovel}. Como posso ajudar?`)}`}
                         target="_blank"
@@ -916,6 +916,12 @@ export default function Home() {
                         className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition"
                       >
                         <Phone className="w-3.5 h-3.5" /> Ligar
+                      </a>
+                      <a
+                        href={`mailto:${lead.email}?subject=${encodeURIComponent(`Resposta sobre o imóvel ${lead.codigoImovel}`)}&body=${encodeURIComponent(`Olá ${lead.nome},\n\nObrigado pelo seu interesse no imóvel ${lead.codigoImovel}.\n\nEm breve retornaremos com mais informações.\n\nAtenciosamente,\nImobiliária Morar Bem`)}`}
+                        className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 bg-violet-50 text-violet-700 hover:bg-violet-100 rounded-lg transition"
+                      >
+                        <Mail className="w-3.5 h-3.5" /> Enviar e-mail
                       </a>
                     </div>
                   </div>
