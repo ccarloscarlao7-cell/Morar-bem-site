@@ -7,5 +7,59 @@
     "tipoImovel": null,
     "faixaInteresse": null,
     "createdAt": "2026-07-01T18:48:08.420Z"
+  },
+  {
+    "id": "1782935712454",
+    "nome": "Jusemar",
+    "telefone": "(48) 92323-3232",
+    "codigoImovel": "A-202",
+    "tipoImovel": "Apartamento",
+    "faixaInteresse": null,
+    "createdAt": "2026-07-01T19:55:12.454Z"
+  },
+  {
+    "id": "1783013463593",
+    "nome": "Roberto",
+    "telefone": "(48) 98430-6111",
+    "codigoImovel": "C-01",
+    "tipoImovel": "Casa",
+    "faixaInteresse": "Até R$ 500.000",
+    "createdAt": "2026-07-02T17:31:03.593Z"
+  },
+  {
+    "id": "1783013903496",
+    "nome": "Roberto",
+    "telefone": "(48) 98430-6111",
+    "codigoImovel": "C-01",
+    "tipoImovel": "Casa",
+    "faixaInteresse": "Até R$ 500.000",
+    "createdAt": "2026-07-02T17:38:23.496Z"
+  },
+  {
+    "id": "1783014680123",
+    "nome": "Roberto",
+    "telefone": "(48) 98430-6111",
+    "codigoImovel": "C-01",
+    "tipoImovel": "Casa",
+    "faixaInteresse": "Até R$ 500.000",
+    "createdAt": "2026-07-02T17:51:20.123Z"
+  },
+  {
+    "id": "1783014730883",
+    "nome": "Roberto",
+    "telefone": "(48) 98430-6111",
+    "codigoImovel": "C-02",
+    "tipoImovel": "Casa",
+    "faixaInteresse": "Até R$ 500.000",
+    "createdAt": "2026-07-02T17:52:10.883Z"
+  },
+  {
+    "id": "1783014890163",
+    "nome": "roberto",
+    "telefone": "(48) 98430-6111",
+    "codigoImovel": "A-303",
+    "tipoImovel": "Apartamento",
+    "faixaInteresse": "Até R$ 500.000",
+    "createdAt": "2026-07-02T17:54:50.163Z"
   }
 ]
