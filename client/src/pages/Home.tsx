@@ -195,6 +195,14 @@ export default function Home() {
   const [tipoImovel, setTipoImovel] = useState("");
   const [faixaInteresse, setFaixaInteresse] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [isIssueOpen, setIsIssueOpen] = useState(false);
+  const [issueMessage, setIssueMessage] = useState("");
+  const [issueAction, setIssueAction] = useState("");
+  const [issueHasScreenshot, setIssueHasScreenshot] = useState(false);
+  const [isConsultOpen, setIsConsultOpen] = useState(false);
+  const [searchName, setSearchName] = useState("");
+  const [searchCodigo, setSearchCodigo] = useState("");
+  const [searchTipo, setSearchTipo] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -338,6 +346,13 @@ export default function Home() {
       return;
     }
 
+    // Additional required fields per CH-03: tipoImovel and faixaInteresse must be provided
+    if (!leadData.tipoImovel || !leadData.faixaInteresse) {
+      setErrorMsg("Campo obrigatório.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const existingLeads: Lead[] = JSON.parse(localStorage.getItem("morar_bem_leads") || "[]");
 
@@ -382,15 +397,29 @@ export default function Home() {
       localStorage.setItem("morar_bem_leads", JSON.stringify(existingLeads));
       loadLeads();
 
-      // Try backend (ignores failure gracefully)
-      await fetch("/api/leads", {
+      // Try backend and handle validation/duplication responses
+      const resp = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(leadData),
-      }).catch(() => {});
+      }).catch(() => null);
 
-      setIsSuccess(true);
-      toast.success("Enviado com Sucesso!");
+      if (!resp) {
+        // network failed, but we already saved locally
+        setIsSuccess(true);
+        toast.success("Salvo localmente com Sucesso!");
+      } else if (resp.status === 201) {
+        setIsSuccess(true);
+        toast.success("Cadastro realizado com sucesso.");
+      } else {
+        const body = await resp.json().catch(() => ({}));
+        const msg = body && body.error ? body.error : "Erro ao enviar os dados.";
+        setErrorMsg(msg);
+        toast.error(msg);
+        // keep form open for corrections; allow user to report
+        setIsSubmitting(false);
+        return;
+      }
     } catch (err) {
       setIsSuccess(true);
       toast.success("Salvo localmente com Sucesso!");
@@ -488,6 +517,14 @@ export default function Home() {
               className="bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-full shadow-lg shadow-blue-700/20 active:scale-95 transition"
             >
               Tenho Interesse
+            </Button>
+            <Button
+              onClick={() => setIsConsultOpen(true)}
+              variant="outline"
+              size="sm"
+              className="ml-2 text-slate-700 hover:bg-slate-100"
+            >
+              Consultar Registros
             </Button>
           </div>
         </div>
@@ -1139,6 +1176,131 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
+      {/* DIALOG: Report Issue */}
+      <Dialog open={isIssueOpen} onOpenChange={setIsIssueOpen}>
+        <DialogContent className="sm:max-w-[520px] p-6 rounded-2xl bg-white border border-slate-100 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle>Reportar Problema</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">Ajude-nos descrevendo o problema e os dados utilizados.</DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const payload = {
+                screen: "Interest Form",
+                action: issueAction || "Salvar lead",
+                message: issueMessage,
+                data: {
+                  nome,
+                  telefone,
+                  email,
+                  codigoImovel,
+                  tipoImovel,
+                  faixaInteresse,
+                },
+                hasScreenshot: issueHasScreenshot,
+                createdAt: new Date().toISOString(),
+              };
+
+              try {
+                await fetch("/api/issues", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+                toast.success("Chamado registrado. Obrigado!");
+                setIsIssueOpen(false);
+              } catch (err) {
+                toast.error("Erro ao enviar chamado.");
+              }
+            }}
+            className="space-y-3"
+          >
+            <div>
+              <Label className="text-slate-700 text-sm">Ação</Label>
+              <Input value={issueAction} onChange={(e) => setIssueAction(e.target.value)} placeholder="Ex: Salvar lead" className="h-10" />
+            </div>
+            <div>
+              <Label className="text-slate-700 text-sm">Mensagem</Label>
+              <Input value={issueMessage} onChange={(e) => setIssueMessage(e.target.value)} className="h-10" />
+            </div>
+            <div>
+              <Label className="text-slate-700 text-sm">Tem print?</Label>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={issueHasScreenshot} onChange={(e) => setIssueHasScreenshot(e.target.checked)} />
+                <span className="text-sm text-slate-500">Marque se possui captura de tela</span>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsIssueOpen(false)} className="flex-1">Cancelar</Button>
+              <Button type="submit" className="flex-1 bg-blue-700 text-white">Enviar Chamado</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG: Consult Leads */}
+      <Dialog open={isConsultOpen} onOpenChange={setIsConsultOpen}>
+        <DialogContent className="max-w-3xl p-6 rounded-2xl bg-white border border-slate-100 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle>Consultar Leads</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">Pesquise e filtre os contatos cadastrados.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <Input placeholder="Pesquisar por nome" value={searchName} onChange={(e) => setSearchName(e.target.value)} />
+              <Input placeholder="Código do imóvel" value={searchCodigo} onChange={(e) => setSearchCodigo(e.target.value)} />
+              <Select value={searchTipo} onValueChange={setSearchTipo}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="Casa">Casa</SelectItem>
+                  <SelectItem value="Apartamento">Apartamento</SelectItem>
+                  <SelectItem value="Terreno">Terreno</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-500">
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>Código</th>
+                    <th>Tipo</th>
+                    <th>Faixa</th>
+                    <th>Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads
+                    .filter((l) => (searchName ? l.nome.toLowerCase().includes(searchName.toLowerCase()) : true))
+                    .filter((l) => (searchCodigo ? l.codigoImovel.toLowerCase().includes(searchCodigo.toLowerCase()) : true))
+                    .filter((l) => (searchTipo ? (l.tipoImovel || "").toLowerCase() === searchTipo.toLowerCase() : true))
+                    .map((l) => (
+                      <tr key={l.id} className="border-t">
+                        <td className="py-2 pr-4">{l.nome}</td>
+                        <td className="py-2 pr-4">{l.telefone}</td>
+                        <td className="py-2 pr-4">{l.codigoImovel}</td>
+                        <td className="py-2 pr-4">{l.tipoImovel}</td>
+                        <td className="py-2 pr-4">{l.faixaInteresse}</td>
+                        <td className="py-2 pr-4">{formatDate(l.createdAt)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={() => setIsConsultOpen(false)} className="bg-slate-900 text-white">Fechar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ═══════════════════════════════════════════════════════════════════════
           DIALOG: Interest Form
       ════════════════════════════════════════════════════════════════════════ */}
@@ -1159,7 +1321,18 @@ export default function Home() {
               {errorMsg && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-start gap-2 text-sm mb-4">
                   <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                  <span>{errorMsg}</span>
+                  <span className="flex-1">{errorMsg}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIssueMessage(errorMsg);
+                      setIssueAction("Salvar lead");
+                      setIsIssueOpen(true);
+                    }}
+                    className="text-xs text-blue-700 underline ml-2"
+                  >
+                    Reportar problema
+                  </button>
                 </div>
               )}
 
@@ -1194,7 +1367,7 @@ export default function Home() {
 
                 <div className="space-y-1.5">
                   <Label className="text-slate-700 font-semibold text-sm flex items-center gap-1">
-                    Tipo de Imóvel <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
+                      Tipo de Imóvel <span className="text-red-500 ml-1 font-bold">*</span>
                   </Label>
                   <Select value={tipoImovel} onValueChange={setTipoImovel}>
                     <SelectTrigger className="rounded-xl border-slate-200 h-11">
@@ -1212,7 +1385,7 @@ export default function Home() {
 
                 <div className="space-y-1.5">
                   <Label className="text-slate-700 font-semibold text-sm flex items-center gap-1">
-                    Faixa de Interesse <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
+                      Faixa de Interesse <span className="text-red-500 ml-1 font-bold">*</span>
                   </Label>
                   <Select value={faixaInteresse} onValueChange={setFaixaInteresse}>
                     <SelectTrigger className="rounded-xl border-slate-200 h-11">

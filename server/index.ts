@@ -49,13 +49,19 @@ async function startServer() {
     const { nome, telefone, email, codigoImovel, tipoImovel, faixaInteresse } = req.body;
 
     // Validation
-    if (!nome || !telefone || !email || !codigoImovel || !nome.trim() || !telefone.trim() || !email.trim() || !codigoImovel.trim()) {
-      return res.status(400).json({ error: "Por favor, preencha todos os campos obrigatórios." });
+    if (!nome || !telefone || !email || !codigoImovel || !tipoImovel || !faixaInteresse || !nome.trim() || !telefone.trim() || !email.trim() || !codigoImovel.trim()) {
+      return res.status(400).json({ error: "Campo obrigatório." });
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      return res.status(400).json({ error: "Por favor, informe um e-mail válido." });
+    if (!emailRegex.test(String(email).trim())) {
+      return res.status(400).json({ error: "Informe um e-mail válido." });
+    }
+
+    // Phone validation
+    const phoneDigits = String(telefone || "").replace(/\D/g, "");
+    if (!/^[0-9]{10,11}$/.test(phoneDigits)) {
+      return res.status(400).json({ error: "Informe um telefone válido." });
     }
 
     const newLead = {
@@ -69,12 +75,61 @@ async function startServer() {
       createdAt: new Date().toISOString()
     };
 
-    const saved = saveLead(newLead);
-    if (!saved) {
-      return res.status(500).json({ error: "Erro ao salvar os dados no servidor." });
-    }
+    // Check duplicates: same codigoImovel + telefone/email, or if codigoImovel empty then telefone/email
+    try {
+      const leads = getLeads();
+      const normalize = (s: any) => (String(s || "").replace(/\D/g, ""));
+      const newPhone = normalize(telefone);
+      const newEmail = String(email || "").toLowerCase();
+      const newCodigo = String(codigoImovel || "").trim();
 
-    res.status(201).json({ success: true, lead: newLead });
+      const duplicate = leads.find((l: any) => {
+        const lPhone = normalize(l.telefone);
+        const lEmail = String(l.email || "").toLowerCase();
+        const lCodigo = String(l.codigoImovel || "").trim();
+
+        if (newCodigo && lCodigo) {
+          if (lCodigo === newCodigo && ((lPhone && lPhone === newPhone) || (lEmail && lEmail === newEmail))) return true;
+        } else {
+          if ((lPhone && lPhone === newPhone) || (lEmail && lEmail === newEmail)) return true;
+        }
+        return false;
+      });
+
+      if (duplicate) {
+        return res.status(409).json({ error: "Cadastro já existente." });
+      }
+
+      const saved = saveLead(newLead);
+      if (!saved) {
+        return res.status(500).json({ error: "Erro ao salvar os dados no servidor." });
+      }
+
+      return res.status(201).json({ success: true, lead: newLead });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ error: "Erro interno ao processar o cadastro." });
+    }
+  });
+
+  // Endpoint to receive issue reports from client for support/diagnosis (CH-01)
+  app.post("/api/issues", (req, res) => {
+    const { screen, action, message, data, hasScreenshot, createdAt } = req.body;
+    const issue = { id: Date.now().toString(), screen, action, message, data, hasScreenshot: !!hasScreenshot, createdAt: createdAt || new Date().toISOString() };
+
+    try {
+      const issuesFile = path.join(__dirname, "issues.json");
+      let issues: any[] = [];
+      if (fs.existsSync(issuesFile)) {
+        issues = JSON.parse(fs.readFileSync(issuesFile, "utf-8"));
+      }
+      issues.push(issue);
+      fs.writeFileSync(issuesFile, JSON.stringify(issues, null, 2), "utf-8");
+      res.status(201).json({ success: true, issue });
+    } catch (e) {
+      console.error("Error saving issue", e);
+      res.status(500).json({ error: "Erro ao registrar chamado." });
+    }
   });
 
   // Serve static files from dist/public in production
