@@ -61,5 +61,32 @@
     "tipoImovel": "Apartamento",
     "faixaInteresse": "Até R$ 500.000",
     "createdAt": "2026-07-02T17:54:50.163Z"
+  },
+  {
+    "id": "1783018331274",
+    "nome": "Robert",
+    "telefone": "(48) 98443-0711",
+    "codigoImovel": "C-01",
+    "tipoImovel": "Comercial",
+    "faixaInteresse": "Até R$ 500.000",
+    "createdAt": "2026-07-02T18:52:11.274Z"
+  },
+  {
+    "id": "1783018450282",
+    "nome": "ASDASDASDA",
+    "telefone": "(21) 31231-2312",
+    "codigoImovel": "ASDASDASD",
+    "tipoImovel": "Comercial",
+    "faixaInteresse": "Até R$ 500.000",
+    "createdAt": "2026-07-02T18:54:10.282Z"
+  },
+  {
+    "id": "1783018632252",
+    "nome": "Roberto",
+    "telefone": "(48) 98430-6111",
+    "codigoImovel": "C-01",
+    "tipoImovel": "Casa",
+    "faixaInteresse": "Até R$ 500.000",
+    "createdAt": "2026-07-02T18:57:12.252Z"
   }
 ]

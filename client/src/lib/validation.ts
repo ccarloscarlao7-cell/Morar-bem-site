@@ -31,9 +31,10 @@ export function validateLeadForm(input: LeadFormInput): ValidationResult {
     return { isValid: false, message: "Informe um e-mail válido." };
   }
 
-  // Phone validation (Brazilian formats like (11) 91234-5678 or 11912345678)
+  // Phone validation (Brazilian DDD + number, 10 or 11 digits)
   const phoneDigits = telefone.replace(/\D/g, "");
-  if (!/^[0-9]{10,11}$/.test(phoneDigits)) {
+  const validPhone = /^(?:[1-9][0-9])(?:9?[0-9]{8})$/.test(phoneDigits);
+  if (!validPhone) {
     return { isValid: false, message: "Informe um telefone válido." };
   }
 

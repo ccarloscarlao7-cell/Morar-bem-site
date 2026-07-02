@@ -58,9 +58,10 @@ async function startServer() {
       return res.status(400).json({ error: "Informe um e-mail válido." });
     }
 
-    // Phone validation
+    // Phone validation (valid Brazilian DDD + number)
     const phoneDigits = String(telefone || "").replace(/\D/g, "");
-    if (!/^[0-9]{10,11}$/.test(phoneDigits)) {
+    const validPhone = /^(?:[1-9][0-9])(?:9?[0-9]{8})$/.test(phoneDigits);
+    if (!validPhone) {
       return res.status(400).json({ error: "Informe um telefone válido." });
     }
 
