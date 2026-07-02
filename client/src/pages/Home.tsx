@@ -340,6 +340,36 @@ export default function Home() {
 
     try {
       const existingLeads: Lead[] = JSON.parse(localStorage.getItem("morar_bem_leads") || "[]");
+
+      // Normaliza telefone e email para comparação
+      const normalizePhone = (p: string) => (p || "").replace(/\D/g, "");
+      const newPhone = normalizePhone(leadData.telefone);
+      const newEmail = (leadData.email || "").toLowerCase();
+      const newCodigo = (leadData.codigoImovel || "").trim();
+
+      const duplicate = existingLeads.find((l) => {
+        const lPhone = normalizePhone(l.telefone as string);
+        const lEmail = (l.email || "").toLowerCase();
+        const lCodigo = (l.codigoImovel || "").trim();
+
+        // Se ambos têm código do imóvel, comparar por imóvel + (telefone ou e-mail)
+        if (newCodigo && lCodigo) {
+          if (lCodigo === newCodigo && (lPhone && lPhone === newPhone || (lEmail && lEmail === newEmail))) return true;
+        } else {
+          // Caso de interesse geral (sem código): considerar duplicata por telefone ou e-mail igual
+          if ((lPhone && lPhone === newPhone) || (lEmail && lEmail === newEmail)) return true;
+        }
+
+        return false;
+      });
+
+      if (duplicate) {
+        setErrorMsg("Já existe um cadastro semelhante para este contato.");
+        toast.error("Já existe um cadastro semelhante. Evite duplicidade.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const newLead: Lead = {
         ...leadData,
         tipoImovel: leadData.tipoImovel,
@@ -347,6 +377,7 @@ export default function Home() {
         id: Date.now().toString(),
         createdAt: new Date().toISOString(),
       };
+
       existingLeads.push(newLead);
       localStorage.setItem("morar_bem_leads", JSON.stringify(existingLeads));
       loadLeads();
@@ -360,7 +391,7 @@ export default function Home() {
 
       setIsSuccess(true);
       toast.success("Enviado com Sucesso!");
-    } catch {
+    } catch (err) {
       setIsSuccess(true);
       toast.success("Salvo localmente com Sucesso!");
     } finally {
